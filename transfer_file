@@ -3,20 +3,26 @@
 # Usage
 # transport_file <IP> <Port> <File_Name / l>
 
-usage_txt = '''Usage: transport_file <IP> <Port> [File_Name / -l]
+usage_txt = '''Usage: transport_file <IP> [File_Name / -l]
 
 upload files to another computer on the same LAN
 or alternatively, download file from a computer on the same LAN
 
 IP - Machine's IP
-Port - Port to be use
 File_name - Specify file name to upload to another computer
-l - Use this flag to download file from another computer'''
+l - Use this flag to download file from another computer
+
+Flags:
+
+v - Verbose
+
+'''
 
 # <Globals>
 
 BUFFER_SIZE = 1024
 END_OF_STREAM = '###END###'
+PORT = 41555
 
 # </Globals>
 
@@ -24,7 +30,7 @@ from sys import argv
 import socket, base64
 
 download = None
-
+verbose = '-v' in argv
 
 def divide(source, packet_size):
     packs = []
@@ -39,29 +45,35 @@ def send_large_data(data, size, s):
         s.send(x)
 
 
-if len(argv) != 4:
+if len(argv) < 3:
     print usage_txt
 else:
     download = '-l' in argv
     if not download:
         s = socket.socket()
-        s.connect((argv[1], int(argv[2])))
+        s.connect((argv[1], PORT))
+	if verbose:
+		print 'Connection established!'
 
-        with open(argv[3], 'rb') as f:
+        with open(argv[2], 'rb') as f:
             byts = f.read()
 
-        byts = base64.b64encode(argv[3]) + '@' + base64.b64encode(byts)
+        byts = base64.b64encode(argv[2]) + '@' + base64.b64encode(byts)
         send_large_data(byts, BUFFER_SIZE, s)
 
         s.close()
-	print 'File uploaded successfully!'
+	if verbose:
+		print 'File uploaded successfully!'
     else:
         s = socket.socket()
-        s.bind(('', int(argv[2])))
+        s.bind(('', PORT))
         s.listen(1)
-	
-	print 'Waiting for connection...'
+
+	if verbose:
+		print 'Waiting for connection...'
         c, addr = s.accept()
+	if verbose:
+		print 'Connected'
         assert (addr[0] == argv[1])
 
         data, current = '', ''
@@ -82,5 +94,6 @@ else:
 
         c.close()
         s.close()
-	print 'File downloaded successfully!'
+	if verbose:
+		print 'File downloaded successfully!'
 
