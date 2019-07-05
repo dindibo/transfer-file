@@ -9,3 +9,6 @@ File_name - Specify file name to upload to another computer
 l - Use this flag to download file from another computer
 
 Note: use either -l flag or specify file name.
+
+Warning:
+Use this tool on your own risk. Some attacks like IP spoofing can be used against you while you're listening for a new connection, to force your computer to download payloads.
